@@ -13,3 +13,4 @@ download sdk dotnet core
 2. open project in visual studio 2017
 3. run (F5)
  
+Data dumy in /SoalInspiro/wwwroot/Makanan.json
