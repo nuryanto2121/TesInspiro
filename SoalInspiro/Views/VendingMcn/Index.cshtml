@@ -1,0 +1,174 @@
+﻿@using SoalInspiro.Models;
+@model Makanan;
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>List Makanan</h1>
+<table id="tblBannerInformation" class="table table-striped table-bordered" cellspacing="0" style="width:100%">
+    <thead>
+        <tr>
+            <th>Nama Makanan</th>
+            <th>Harga</th>
+            <th>Stock</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            List<Makanan> dataList = ViewBag.ListMakanan;
+            int i = 0;
+        }
+        @foreach (var Makanan in dataList)
+        {
+        <tr>
+            @*<td onclick="fn_PilihMakanan(@Makanan.Nama,@Makanan.Harga,@Makanan.Stock)">@Makanan.Nama</td>*@
+            <td class="getTD" data-nama="@Makanan.Nama" data-harga="@Makanan.Harga" data-stock="@Makanan.Stock">@Makanan.Nama</td>
+            <td>@Makanan.Harga</td>
+            <td>@Makanan.Stock</td>
+        </tr>
+
+            i++;
+
+        }
+    </tbody>
+</table>
+
+@using (Html.BeginForm("Proses", "VendingMcn", FormMethod.Post, new { id = "frmEditor", @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="box">
+
+        <div class="box-body">
+            <legend style="border-width:2px; border-color:#6c727c">Masukan Uang</legend>
+
+            <div class="form-group col-xs-12">
+                <div class="col-xs-6">
+                    <button type="button" id="btnSave" onclick="fn_AddUang(2000)" class="btn btn-primary">2000</button>
+                    <button type="button" id="btnSave" onclick="fn_AddUang(5000)" class="btn btn-primary">5000</button>
+                    <button type="button" id="btnSave" onclick="fn_AddUang(10000)" class="btn btn-primary">10000</button>
+                    <button type="button" id="btnSave" onclick="fn_AddUang(20000)" class="btn btn-primary">20000</button>
+                    <button type="button" id="btnSave" onclick="fn_AddUang(50000)" class="btn btn-primary">50000</button>
+                    @*@Html.DropDownListFor(model => model.IdMachine1, ViewBag.MachineList as SelectList, new { @class = "form-control" })*@
+                </div>
+                <div class="col-xs-6">
+                    <label for="uangAnda" class="col-xs-12 control-label-new">Uang Anda</label>
+                    @Html.TextBox("UangMasukText", "0", new { @class = "form-control", @readonly = "readonly" })
+                </div>
+            </div>
+            <div class="form-group col-xs-12">
+                <label for="informationId" class="col-xs-12 control-label-new">Klik Nama Makanan di list atas</label>
+            </div>
+            <div class="form-group col-xs-12">
+                <label id="listMakanan" for="informationId" class="col-xs-12 control-label-new"></label>
+
+            </div>
+            <div class="form-group col-xs-12">
+                <label id="totalHarga" for="informationId" class="col-xs-12 control-label-new"></label>
+
+            </div>
+            <div class="form-group col-xs-12">
+                <div class="col-xs-6">
+                    <label for="uangKembalian" class="col-xs-12 control-label-new">Uang Kembalian</label>
+                    @Html.TextBox("UangKembaliText", "0", new { @class = "form-control", @readonly = "readonly" })
+                </div>
+
+            </div>
+
+
+
+        </div>
+    </div>
+
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+        <button type="button" id="btnSave" class="btn btn-primary save">Save</button>
+        <button type="button" onclick="fn_Cancel()" class="btn btn-primary" >Cancel</button>
+    </div>
+
+}
+
+    <script>
+
+        var totalHarga = 0;
+        var totalStock = 0;
+        var makanan = [];
+        var dataMakanan = [];
+        console.log('@dataList')
+    $(document).ready(function () {
+        $(".getTD").click(function () {
+            nama = $(this).data('nama');
+            harga = $(this).data('harga');
+            stock = $(this).data('stock');
+            makanan.push({
+                nama: nama,
+                harga: harga,
+                stock: stock
+            })
+           
+            var uangAnda = parseInt(document.getElementById("UangMasukText").value);
+            totalHarga = totalHarga + parseInt(harga);
+            console.log(totalHarga);
+            console.log(uangAnda);
+            if (totalHarga > uangAnda) {
+                alert("Uang Anda tidak mencukupi.");
+                totalHarga = totalHarga - parseInt(harga);
+                return;
+            }
+            if (stock == 0) {
+                alert(nama + " saat ini stock kosong, silahkan pilih yang lain.")
+                return;
+            }
+            document.getElementById("UangKembaliText").value = uangAnda - totalHarga;
+            console.log(makanan);
+            var textLabel = $("#listMakanan").html() + nama+" Harga :"+harga+" <br />";
+            $("#listMakanan").html(textLabel);
+            $("#totalHarga").html("");
+            $("#totalHarga").html("Total :" + totalHarga);// makanan.sum("harga"));
+        });
+      
+
+        $('.save').click(function () {
+            if ($("#totalHarga").html() == 0 || $("#totalHarga").html() == "") {
+                return;
+            }
+          
+            var dataMakanan = @Html.Raw(Json.Serialize(dataList));
+            
+              $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("Prosess", "VendingMcn")',
+                  data: { 'models': makanan, "dataMakanan": dataMakanan }
+                })
+                  .done(function (msg) {
+                      console.log(msg)
+                                            
+                      if (msg.isError) {
+                          alert(msg.pesan);
+                      } else {
+                          alert(msg.pesan);
+                          location.reload(); 
+                      }
+
+
+
+                  })
+                    .fail(function (jqXHR, textStatus) {
+                        //alert(textStatus.Response);
+                    });
+        });
+    });
+    function fn_AddUang(value) {
+        var Uin = document.getElementById("UangMasukText").value;
+        document.getElementById("UangMasukText").value = parseInt(Uin) + parseInt(value);
+    }
+    function fn_Cancel() {
+        document.getElementById("UangMasukText").value = 0;
+        document.getElementById("UangKembaliText").value = 0;
+        $("#listMakanan").html("");
+        $("#totalHarga").html("");
+        totalHarga = 0;
+        makanan = [];
+    }
+
+    </script>
