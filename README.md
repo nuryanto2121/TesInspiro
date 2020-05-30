@@ -14,3 +14,4 @@ download sdk dotnet core
 3. run (F5)
  
 Data dumy in /SoalInspiro/wwwroot/Makanan.json
+Screen https://github.com/nuryanto2121/TesInspiro/blob/master/SoalInspiro/wwwroot/screen.png
